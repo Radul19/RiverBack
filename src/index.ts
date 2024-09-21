@@ -1,7 +1,7 @@
 import express from 'express'
-import routeGuest from './src/routes/guest.routes'
-import routeUser from './src/routes/user.routes'
-import routeCommerce from './src/routes/commerce.routes'
+import routeGuest from './routes/guest.routes'
+import routeUser from './routes/user.routes'
+import routeCommerce from './routes/commerce.routes'
 //@ts-ignore
 import cors from 'cors'
 import './db'
