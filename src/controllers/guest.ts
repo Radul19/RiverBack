@@ -1,131 +1,162 @@
 //@ts-ignore
-import bcrypt from 'bcrypt'
+import bcrypt from "bcrypt";
 //@ts-ignore
-import { sign } from "jsonwebtoken"
+import { sign } from "jsonwebtoken";
 
-import { Request, Response } from 'express'
-import debugg from '../helpers/debug'
-import User from '../models/userSchema'
-import Item from '../models/itemSchema'
-import Commerce from '../models/commerceSchema'
+import { Request, Response } from "express";
+import debugg from "../helpers/debug";
+import User from "../models/userSchema";
+import Item from "../models/itemSchema";
+import Commerce from "../models/commerceSchema";
 
-type ReqRes = (req: Request, res: Response) => void
+type ReqRes = (req: Request, res: Response) => void;
 
 export const test: ReqRes = (req, res) => {
-    if (debugg) console.log('#test')
+  if (debugg) console.log("#test");
 
-    // console.log(filter.clean("What an asshole"))
-    res.send('WORKING')
-}
-
+  // console.log(filter.clean("What an asshole"))
+  res.send("WORKING");
+};
 
 export const login: ReqRes = async (req, res) => {
-    if (debugg) console.log('#login')
-    try {
-        const { email, password: pass } = req.body
+  if (debugg) console.log("#login");
+  try {
+    const { email, password: pass } = req.body;
 
-        console.log(email);
-        const user = await (await User.findOne({ email })).populate("commerce")
-        if (!user) return res.status(401).json({ msg: 'Correo incorrecto' })
-            console.log(user.commerce);
+    console.log(email);
+    const user = await User.findOne({ email })
+    if (!user) return res.status(401).json({ msg: "Correo incorrecto" });
+    user.populate('commerce')
 
-        bcrypt.compare(pass, user.password, function (_: any, result: any) {
-            if (!result) return res.status(401).json({ msg: 'Contraseña incorrecta' })
-            const { name, email, avatar, card_id, commerce,_id } = user
-            let token = sign({ data: user._id, exp: Math.floor((Date.now() / 1000) + (2592000)) }, process.env.SECRET)
-            return res.send({ name, email, avatar, card_id, commerce, token,_id })
-        })
-
-    } catch (error: any) {
-        res.status(404).json({ msg: error.message })
-    }
-}
-
+    bcrypt.compare(pass, user.password, function (_: any, result: any) {
+      if (!result)
+        return res.status(401).json({ msg: "Contraseña incorrecta" });
+      const { name, email, avatar, card_id, commerce, _id } = user;
+      let token = sign(
+        { data: user._id, exp: Math.floor(Date.now() / 1000 + 2592000) },
+        process.env.SECRET
+      );
+      return res.send({ name, email, avatar, card_id, commerce, token, _id });
+    });
+  } catch (error: any) {
+    res.status(404).json({ msg: error.message });
+  }
+};
 
 export const register: ReqRes = async (req, res) => {
-    if (debugg) console.log('#register')
-    try {
-        const { name, email, card_id, password: pass, avatar } = req.body
+  if (debugg) console.log("#register");
+  try {
+    const { name, email, card_id, password: pass, avatar } = req.body;
 
-        let password = bcrypt.hashSync(pass, bcrypt.genSaltSync(10));
+    let password = bcrypt.hashSync(pass, bcrypt.genSaltSync(10));
 
-        let findEmail = await User.findOne({ email })
-        let findCardId = await User.findOne({ card_id })
+    let findEmail = await User.findOne({ email });
+    let findCardId = await User.findOne({ card_id });
 
-        if (findEmail) return res.status(409).json({ msg: 'El correo ya esta en uso' })
-        if (findCardId) return res.status(409).json({ msg: 'La cedula ya esta en uso' })
+    if (findEmail)
+      return res.status(409).json({ msg: "El correo ya esta en uso" });
+    if (findCardId)
+      return res.status(409).json({ msg: "La cedula ya esta en uso" });
 
-        const newUser = await User.create({
-            name,
-            email,
-            card_id,
-            password,
-            avatar,
-        })
-        let token = sign({ data: newUser._id, exp: Math.floor((Date.now() / 1000) + (2592000)) }, process.env.SECRET)
-        // console.log(token)
-        const { name: n, email: e, avatar: a, card_id: ci, commerce,_id } = newUser
+    const newUser = await User.create({
+      name,
+      email,
+      card_id,
+      password,
+      avatar,
+    });
+    let token = sign(
+      { data: newUser._id, exp: Math.floor(Date.now() / 1000 + 2592000) },
+      process.env.SECRET
+    );
+    // console.log(token)
+    const {
+      name: n,
+      email: e,
+      avatar: a,
+      card_id: ci,
+      commerce,
+      _id,
+    } = newUser;
 
-        res.send({ name: n, email: e, avatar: a, card_id: ci, commerce, token,_id })
-
-    } catch (error: any) {
-        res.status(400).json({ msg: error.message })
-    }
-}
-
+    res.send({
+      name: n,
+      email: e,
+      avatar: a,
+      card_id: ci,
+      commerce,
+      token,
+      _id,
+    });
+  } catch (error: any) {
+    res.status(400).json({ msg: error.message });
+  }
+};
 
 export const getItem: ReqRes = async (req, res) => {
-    if (debugg) console.log('#getItem')
-    const { id } = req.params
+  if (debugg) console.log("#getItem");
+  const { id } = req.params;
 
-    const result = await Item.findOne({ _id: id }).populate('reviews.user', 'name avatar')
-    if (result) res.send(result)
-    else res.status(404).json({ msg: 'Elemento no encontrado' })
-}
+  const result = await Item.findOne({ _id: id }).populate(
+    "reviews.user",
+    "name avatar"
+  );
+  if (result) res.send(result);
+  else res.status(404).json({ msg: "Elemento no encontrado" });
+};
 export const getMarket: ReqRes = async (req, res) => {
-    if (debugg) console.log('#getMarket')
-    const { id } = req.params
+  if (debugg) console.log("#getMarket");
+  const { id } = req.params;
 
-    const shop = await Commerce.findOne({ _id: id })
-    const items = await Item.find({ owner_id: id }).populate('reviews.user', 'name avatar')
-    if (shop) res.send({shop,items})
-    else res.status(404).json({ msg: 'Elemento no encontrado' })
-}
-
+  const shop = await Commerce.findOne({ _id: id });
+  const items = await Item.find({ owner_id: id }).populate(
+    "reviews.user",
+    "name avatar"
+  );
+  if (shop) res.send({ shop, items });
+  else res.status(404).json({ msg: "Elemento no encontrado" });
+};
 
 export const searchItems: ReqRes = async (req, res) => {
-    if (debugg) console.log('#searchItems')
-    try {
-        const { text = false, categories = false, owner_id = false } = req.body
+  if (debugg) console.log("#searchItems");
+  try {
+    const { text = false, categories = false, owner_id = false } = req.body;
 
-        const markets = categories ? categories.includes('Tiendas') : false
+    const markets = categories ? categories.includes("Tiendas") : false;
 
-        if (markets) {
-            categories.splice(categories.indexOf('Tiendas'), 1)
-            // console.log(categories && categories.length > 0)
-            const result = await Commerce.find({
-                $or: [{ name: text ? new RegExp(text, "i") : { $exists: true } }, { description: text ? new RegExp(text, "i") : { $exists: true }, }],
-                categories: categories && categories.length > 0 ? { $in: categories } : { $exists: true },
-                owner_id: owner_id ? owner_id : { $exists: true }
-            })
-            return res.send(result)
-
-        } else {
-            const items = await Item.find({
-                $or: [{ name: text ? new RegExp(text, "i") : { $exists: true } }, { description: text ? new RegExp(text, "i") : { $exists: true }, }],
-                categories: categories ? { $in: categories } : { $exists: true },
-                owner_id: owner_id ? owner_id : { $exists: true }
-            }).populate('reviews.user', 'name avatar')
-            return res.send(items)
-        }
-
-        // items.forEach(elem=>{
-        //     elem.images.forEach(img=>{
-        //         img = img.image
-        //     })
-        // })
-    } catch (error: any) {
-        res.status(400).json({ msg: error.message })
+    if (markets) {
+      categories.splice(categories.indexOf("Tiendas"), 1);
+      // console.log(categories && categories.length > 0)
+      const result = await Commerce.find({
+        $or: [
+          { name: text ? new RegExp(text, "i") : { $exists: true } },
+          { description: text ? new RegExp(text, "i") : { $exists: true } },
+        ],
+        categories:
+          categories && categories.length > 0
+            ? { $in: categories }
+            : { $exists: true },
+        owner_id: owner_id ? owner_id : { $exists: true },
+      });
+      return res.send(result);
+    } else {
+      const items = await Item.find({
+        $or: [
+          { name: text ? new RegExp(text, "i") : { $exists: true } },
+          { description: text ? new RegExp(text, "i") : { $exists: true } },
+        ],
+        categories: categories ? { $in: categories } : { $exists: true },
+        owner_id: owner_id ? owner_id : { $exists: true },
+      }).populate("reviews.user", "name avatar");
+      return res.send(items);
     }
 
-}
+    // items.forEach(elem=>{
+    //     elem.images.forEach(img=>{
+    //         img = img.image
+    //     })
+    // })
+  } catch (error: any) {
+    res.status(400).json({ msg: error.message });
+  }
+};
