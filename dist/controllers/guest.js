@@ -34,9 +34,10 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { email, password: pass } = req.body;
         console.log(email);
-        const user = yield userSchema_1.default.findOne({ email });
+        const user = yield (yield userSchema_1.default.findOne({ email })).populate("commerce");
         if (!user)
             return res.status(401).json({ msg: 'Correo incorrecto' });
+        console.log(user.commerce);
         bcrypt_1.default.compare(pass, user.password, function (_, result) {
             if (!result)
                 return res.status(401).json({ msg: 'Contraseña incorrecta' });
@@ -71,8 +72,8 @@ const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         });
         let token = (0, jsonwebtoken_1.sign)({ data: newUser._id, exp: Math.floor((Date.now() / 1000) + (2592000)) }, process.env.SECRET);
         // console.log(token)
-        const { name: n, email: e, avatar: a, card_id: ci, commerce } = newUser;
-        res.send({ name: n, email: e, avatar: a, card_id: ci, commerce, token });
+        const { name: n, email: e, avatar: a, card_id: ci, commerce, _id } = newUser;
+        res.send({ name: n, email: e, avatar: a, card_id: ci, commerce, token, _id });
     }
     catch (error) {
         res.status(400).json({ msg: error.message });

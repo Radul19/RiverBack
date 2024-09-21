@@ -25,8 +25,9 @@ export const login: ReqRes = async (req, res) => {
         const { email, password: pass } = req.body
 
         console.log(email);
-        const user = await User.findOne({ email })
+        const user = await (await User.findOne({ email })).populate("commerce")
         if (!user) return res.status(401).json({ msg: 'Correo incorrecto' })
+            console.log(user.commerce);
 
         bcrypt.compare(pass, user.password, function (_: any, result: any) {
             if (!result) return res.status(401).json({ msg: 'Contraseña incorrecta' })
@@ -63,9 +64,9 @@ export const register: ReqRes = async (req, res) => {
         })
         let token = sign({ data: newUser._id, exp: Math.floor((Date.now() / 1000) + (2592000)) }, process.env.SECRET)
         // console.log(token)
-        const { name: n, email: e, avatar: a, card_id: ci, commerce } = newUser
+        const { name: n, email: e, avatar: a, card_id: ci, commerce,_id } = newUser
 
-        res.send({ name: n, email: e, avatar: a, card_id: ci, commerce, token })
+        res.send({ name: n, email: e, avatar: a, card_id: ci, commerce, token,_id })
 
     } catch (error: any) {
         res.status(400).json({ msg: error.message })
