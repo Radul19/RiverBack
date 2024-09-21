@@ -24,13 +24,14 @@ export const login: ReqRes = async (req, res) => {
     const { email, password: pass } = req.body;
 
     console.log(email);
-    const user = await User.findOne({ email })
+    const user = await User.findOne({ email });
     if (!user) return res.status(401).json({ msg: "Correo incorrecto" });
-    user.populate('commerce')
 
     bcrypt.compare(pass, user.password, function (_: any, result: any) {
       if (!result)
         return res.status(401).json({ msg: "Contraseña incorrecta" });
+      user.populate("commerce");
+      console.log(user.commerce);
       const { name, email, avatar, card_id, commerce, _id } = user;
       let token = sign(
         { data: user._id, exp: Math.floor(Date.now() / 1000 + 2592000) },

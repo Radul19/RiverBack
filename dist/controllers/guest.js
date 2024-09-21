@@ -23,26 +23,27 @@ const itemSchema_1 = __importDefault(require("../models/itemSchema"));
 const commerceSchema_1 = __importDefault(require("../models/commerceSchema"));
 const test = (req, res) => {
     if (debug_1.default)
-        console.log('#test');
+        console.log("#test");
     // console.log(filter.clean("What an asshole"))
-    res.send('WORKING');
+    res.send("WORKING");
 };
 exports.test = test;
 const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (debug_1.default)
-        console.log('#login');
+        console.log("#login");
     try {
         const { email, password: pass } = req.body;
         console.log(email);
-        const user = yield (yield userSchema_1.default.findOne({ email })).populate("commerce");
+        const user = yield userSchema_1.default.findOne({ email });
         if (!user)
-            return res.status(401).json({ msg: 'Correo incorrecto' });
-        console.log(user.commerce);
+            return res.status(401).json({ msg: "Correo incorrecto" });
         bcrypt_1.default.compare(pass, user.password, function (_, result) {
             if (!result)
-                return res.status(401).json({ msg: 'Contraseña incorrecta' });
+                return res.status(401).json({ msg: "Contraseña incorrecta" });
+            user.populate("commerce");
+            console.log(user.commerce);
             const { name, email, avatar, card_id, commerce, _id } = user;
-            let token = (0, jsonwebtoken_1.sign)({ data: user._id, exp: Math.floor((Date.now() / 1000) + (2592000)) }, process.env.SECRET);
+            let token = (0, jsonwebtoken_1.sign)({ data: user._id, exp: Math.floor(Date.now() / 1000 + 2592000) }, process.env.SECRET);
             return res.send({ name, email, avatar, card_id, commerce, token, _id });
         });
     }
@@ -53,16 +54,16 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 exports.login = login;
 const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (debug_1.default)
-        console.log('#register');
+        console.log("#register");
     try {
         const { name, email, card_id, password: pass, avatar } = req.body;
         let password = bcrypt_1.default.hashSync(pass, bcrypt_1.default.genSaltSync(10));
         let findEmail = yield userSchema_1.default.findOne({ email });
         let findCardId = yield userSchema_1.default.findOne({ card_id });
         if (findEmail)
-            return res.status(409).json({ msg: 'El correo ya esta en uso' });
+            return res.status(409).json({ msg: "El correo ya esta en uso" });
         if (findCardId)
-            return res.status(409).json({ msg: 'La cedula ya esta en uso' });
+            return res.status(409).json({ msg: "La cedula ya esta en uso" });
         const newUser = yield userSchema_1.default.create({
             name,
             email,
@@ -70,10 +71,18 @@ const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             password,
             avatar,
         });
-        let token = (0, jsonwebtoken_1.sign)({ data: newUser._id, exp: Math.floor((Date.now() / 1000) + (2592000)) }, process.env.SECRET);
+        let token = (0, jsonwebtoken_1.sign)({ data: newUser._id, exp: Math.floor(Date.now() / 1000 + 2592000) }, process.env.SECRET);
         // console.log(token)
-        const { name: n, email: e, avatar: a, card_id: ci, commerce, _id } = newUser;
-        res.send({ name: n, email: e, avatar: a, card_id: ci, commerce, token, _id });
+        const { name: n, email: e, avatar: a, card_id: ci, commerce, _id, } = newUser;
+        res.send({
+            name: n,
+            email: e,
+            avatar: a,
+            card_id: ci,
+            commerce,
+            token,
+            _id,
+        });
     }
     catch (error) {
         res.status(400).json({ msg: error.message });
@@ -82,49 +91,57 @@ const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 exports.register = register;
 const getItem = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (debug_1.default)
-        console.log('#getItem');
+        console.log("#getItem");
     const { id } = req.params;
-    const result = yield itemSchema_1.default.findOne({ _id: id }).populate('reviews.user', 'name avatar');
+    const result = yield itemSchema_1.default.findOne({ _id: id }).populate("reviews.user", "name avatar");
     if (result)
         res.send(result);
     else
-        res.status(404).json({ msg: 'Elemento no encontrado' });
+        res.status(404).json({ msg: "Elemento no encontrado" });
 });
 exports.getItem = getItem;
 const getMarket = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (debug_1.default)
-        console.log('#getMarket');
+        console.log("#getMarket");
     const { id } = req.params;
     const shop = yield commerceSchema_1.default.findOne({ _id: id });
-    const items = yield itemSchema_1.default.find({ owner_id: id }).populate('reviews.user', 'name avatar');
+    const items = yield itemSchema_1.default.find({ owner_id: id }).populate("reviews.user", "name avatar");
     if (shop)
         res.send({ shop, items });
     else
-        res.status(404).json({ msg: 'Elemento no encontrado' });
+        res.status(404).json({ msg: "Elemento no encontrado" });
 });
 exports.getMarket = getMarket;
 const searchItems = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (debug_1.default)
-        console.log('#searchItems');
+        console.log("#searchItems");
     try {
         const { text = false, categories = false, owner_id = false } = req.body;
-        const markets = categories ? categories.includes('Tiendas') : false;
+        const markets = categories ? categories.includes("Tiendas") : false;
         if (markets) {
-            categories.splice(categories.indexOf('Tiendas'), 1);
+            categories.splice(categories.indexOf("Tiendas"), 1);
             // console.log(categories && categories.length > 0)
             const result = yield commerceSchema_1.default.find({
-                $or: [{ name: text ? new RegExp(text, "i") : { $exists: true } }, { description: text ? new RegExp(text, "i") : { $exists: true }, }],
-                categories: categories && categories.length > 0 ? { $in: categories } : { $exists: true },
-                owner_id: owner_id ? owner_id : { $exists: true }
+                $or: [
+                    { name: text ? new RegExp(text, "i") : { $exists: true } },
+                    { description: text ? new RegExp(text, "i") : { $exists: true } },
+                ],
+                categories: categories && categories.length > 0
+                    ? { $in: categories }
+                    : { $exists: true },
+                owner_id: owner_id ? owner_id : { $exists: true },
             });
             return res.send(result);
         }
         else {
             const items = yield itemSchema_1.default.find({
-                $or: [{ name: text ? new RegExp(text, "i") : { $exists: true } }, { description: text ? new RegExp(text, "i") : { $exists: true }, }],
+                $or: [
+                    { name: text ? new RegExp(text, "i") : { $exists: true } },
+                    { description: text ? new RegExp(text, "i") : { $exists: true } },
+                ],
                 categories: categories ? { $in: categories } : { $exists: true },
-                owner_id: owner_id ? owner_id : { $exists: true }
-            }).populate('reviews.user', 'name avatar');
+                owner_id: owner_id ? owner_id : { $exists: true },
+            }).populate("reviews.user", "name avatar");
             return res.send(items);
         }
         // items.forEach(elem=>{
