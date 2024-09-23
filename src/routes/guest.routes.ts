@@ -12,7 +12,7 @@ router.post('/searchItems', guest.searchItems)
 router.get('/getItem/:id', guest.getItem)
 router.get('/getMarket/:id', guest.getMarket)
 
-router.get('/download', guest.download)
+// router.get('/download', guest.download)
 
 export default router
 // module.exports = router

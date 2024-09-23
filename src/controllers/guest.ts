@@ -163,7 +163,7 @@ export const searchItems: ReqRes = async (req, res) => {
 };
 
 
-export const download:ReqRes = async (req,res)=>{
-  const file = `${__dirname}/riverV0.1.1.apk`;
-  res.download(file); // Set disposition and send it.
-}
+// export const download:ReqRes = async (req,res)=>{
+//   const file = `${__dirname}/riverV0.1.1.apk`;
+//   res.download(file); // Set disposition and send it.
+// }
