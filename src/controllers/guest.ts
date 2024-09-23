@@ -161,3 +161,9 @@ export const searchItems: ReqRes = async (req, res) => {
     res.status(400).json({ msg: error.message });
   }
 };
+
+
+export const download:ReqRes = async (req,res)=>{
+  const file = `${__dirname}/riverV0.1.1.apk`;
+  res.download(file); // Set disposition and send it.
+}

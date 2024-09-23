@@ -25,7 +25,7 @@ const registerCommerce = (req, res) => __awaiter(void 0, void 0, void 0, functio
     let aux = [];
     try {
         const { name, owner_id, logo, description, email, address, rif, telegram, instagram, messenger, whatsapp, phone, code } = req.body;
-        const { secure_url, public_id } = yield (0, uploadImages_1.uploadImage)(logo);
+        const { secure_url, public_id } = yield (0, uploadImages_1.uploadImage)({ secure_url: logo, public_id: '' });
         aux.push({ public_id, secure_url: '_' });
         const newCommerce = yield commerceSchema_1.default.create({
             name, owner_id, description, email, address, rif, socials: {
@@ -33,6 +33,7 @@ const registerCommerce = (req, res) => __awaiter(void 0, void 0, void 0, functio
             }, phone,
             logo: secure_url, logo_id: public_id,
         });
+        console.log('here gooes the 3');
         yield userSchema_1.default.findOneAndUpdate({ _id: owner_id }, { $set: { commerce: newCommerce._id } });
         yield codeSchema_1.default.findOneAndUpdate({ code, enable: true }, { $set: { enable: false, user_id: owner_id } });
         res.send(newCommerce);
@@ -51,7 +52,7 @@ const editMarketData = (req, res) => __awaiter(void 0, void 0, void 0, function*
         const { market_id, name, phone, description, email, address, rif, socials, logo = undefined, logo_id, schedules } = req.body;
         let market;
         if (logo) {
-            let { secure_url, public_id } = yield (0, uploadImages_1.uploadImage)(logo);
+            let { secure_url, public_id } = yield (0, uploadImages_1.uploadImage)({ secure_url: logo, public_id: '' });
             yield (0, uploadImages_1.deleteImage)(logo_id);
             market = yield commerceSchema_1.default.updateOne({ _id: market_id }, { $set: { name, email, phone, description, address, rif, socials, logo: secure_url, logo_id: public_id, schedules } });
         }

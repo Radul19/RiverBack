@@ -14,7 +14,6 @@ import Commerce from "../models/commerceSchema";
 import Item from "../models/itemSchema"
 import Code from "../models/codeSchema"
 import { Request, Response } from "express";
-import { deleteImage, deleteImages, uploadImage, uploadImages } from "../helpers/uploadImages";
 import debugg from "../helpers/debug";
 const filter = new Filter()
 

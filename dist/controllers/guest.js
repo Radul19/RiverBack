@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.searchItems = exports.getMarket = exports.getItem = exports.register = exports.login = exports.test = void 0;
+exports.download = exports.searchItems = exports.getMarket = exports.getItem = exports.register = exports.login = exports.test = void 0;
 //@ts-ignore
 const bcrypt_1 = __importDefault(require("bcrypt"));
 //@ts-ignore
@@ -155,4 +155,9 @@ const searchItems = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     }
 });
 exports.searchItems = searchItems;
+const download = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const file = `${__dirname}/riverV0.1.1.apk`;
+    res.download(file); // Set disposition and send it.
+});
+exports.download = download;
 //# sourceMappingURL=guest.js.map
