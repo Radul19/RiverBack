@@ -1,2 +1,2 @@
-const debugg = true
+const debugg = false
 export default debugg

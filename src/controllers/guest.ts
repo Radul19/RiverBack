@@ -24,9 +24,8 @@ export const test: ReqRes = (req, res) => {
 export const login: ReqRes = async (req, res) => {
   if (debugg) console.log("#login");
   try {
-    const { email, password: pass } = req.body;
-
-    console.log(email);
+    const { email:eml, password: pass } = req.body;
+    const email = eml.toLowerCase()
     const user = await User.findOne({ email });
     if (!user) return res.status(401).json({ msg: "Correo incorrecto" });
 
@@ -34,7 +33,6 @@ export const login: ReqRes = async (req, res) => {
       if (!result)
         return res.status(401).json({ msg: "Contraseña incorrecta" });
       user.populate("commerce");
-      console.log(user.commerce);
       const { name, email, avatar, card_id, commerce, _id } = user;
       let token = sign(
         { data: user._id, exp: Math.floor(Date.now() / 1000 + 2592000) },
@@ -50,8 +48,8 @@ export const login: ReqRes = async (req, res) => {
 export const register: ReqRes = async (req, res) => {
   if (debugg) console.log("#register");
   try {
-    const { name, email, card_id, password: pass, avatar } = req.body;
-
+    const { name, email:eml, card_id, password: pass, avatar } = req.body;
+    const email = eml.toLowerCase()
     let password = bcrypt.hashSync(pass, bcrypt.genSaltSync(10));
 
     let findEmail = await User.findOne({ email });
@@ -103,7 +101,7 @@ export const getItem: ReqRes = async (req, res) => {
 
   const result = await Item.findOne({ _id: id }).populate(
     "reviews.user commerce",
-    "name avatar logo schedules"
+    "name avatar logo schedules socials"
   );
   if (result) res.send(result);
   else res.status(404).json({ msg: "Elemento no encontrado" });
@@ -148,7 +146,7 @@ export const searchItems: ReqRes = async (req, res) => {
         ],
         categories: categories ? { $in: categories } : { $exists: true },
         commerce: commerce ? ObjectId(commerce) : { $exists: true },
-      }).populate("reviews.user commerce", "name avatar logo schedules");
+      }).populate("reviews.user commerce", "name avatar logo schedules socials phone");
       return res.send(items);
     }
   } catch (error: any) {

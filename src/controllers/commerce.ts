@@ -15,7 +15,8 @@ export const registerCommerce: ReqRes = async (req, res) => {
     if (debugg) console.log('#registerCommerce')
     let aux: Image[] = []
     try {
-        const { name, owner_id, logo, description, email,categories, address, delivery,rif, socials,phone, code } = req.body
+        const { name, owner_id, logo, description, email:eml,categories, address, delivery,rif, socials,phone, code } = req.body
+        const email = eml.toLowerCase()
         const { secure_url, public_id } = await uploadImage({secure_url:logo,public_id:''})
         aux.push({ public_id, secure_url: '_' })
         const newCommerce = await Commerce.create({
@@ -38,7 +39,8 @@ export const registerCommerce: ReqRes = async (req, res) => {
 export const editMarketData: ReqRes = async (req, res) => {
     if (debugg) console.log('#editMarketData')
     try {
-        const { market_id, name, phone, description, email, address, categories,rif, socials,delivery, logo, logo_id, schedules } = req.body
+        const { market_id, name, phone, description, email:eml, address, categories,rif, socials,delivery, logo, logo_id, schedules } = req.body
+        const email = eml.toLowerCase()
         let { secure_url, public_id } = await uploadImage({secure_url:logo,public_id:logo_id})
         const market = await Commerce.findOneAndUpdate({ _id: market_id }, { $set: { name, email, phone, description, address, rif, socials, delivery,schedules,logo: secure_url, logo_id: public_id,categories } },{new:true})
         if (market) res.send(market)
