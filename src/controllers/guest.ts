@@ -137,7 +137,7 @@ export const searchItems: ReqRes = async (req, res) => {
           categories && categories.length > 0
             ? { $in: categories }
             : { $exists: true },
-        commerce: commerce ? commerce : { $exists: true },
+        commerce: commerce ? ObjectId(commerce) : { $exists: true },
       });
       return res.send(result);
     } else {
