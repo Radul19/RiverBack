@@ -132,7 +132,7 @@ const searchItems = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
                 categories: categories && categories.length > 0
                     ? { $in: categories }
                     : { $exists: true },
-                commerce: commerce ? commerce : { $exists: true },
+                owner_id: commerce ? commerce : { $exists: true },
             });
             return res.send(result);
         }
