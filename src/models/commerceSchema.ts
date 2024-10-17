@@ -13,6 +13,7 @@ const CommerceSchema = new Schema(
         email: { type: String},
         address: { type: String},
         rif: { type: String},
+        delivery: { type: Boolean,required:true},
         reviews: [{
             type: new Schema(
                 {

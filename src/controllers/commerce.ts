@@ -15,17 +15,14 @@ export const registerCommerce: ReqRes = async (req, res) => {
     if (debugg) console.log('#registerCommerce')
     let aux: Image[] = []
     try {
-        const { name, owner_id, logo, description, email, address, rif, telegram, instagram, messenger, whatsapp, phone, code } = req.body
+        const { name, owner_id, logo, description, email,categories, address, delivery,rif, socials,phone, code } = req.body
         const { secure_url, public_id } = await uploadImage({secure_url:logo,public_id:''})
         aux.push({ public_id, secure_url: '_' })
         const newCommerce = await Commerce.create({
-            name, owner_id, description, email, address, rif, socials: {
-                telegram, instagram, messenger, whatsapp
-            }, phone,
-            logo: secure_url, logo_id: public_id,
+            name, owner_id, description, email, address, delivery,rif,socials, phone,
+            logo: secure_url, logo_id: public_id,categories
         })
         
-        console.log('here gooes the 3');
         await User.findOneAndUpdate({ _id: owner_id }, { $set: { commerce: newCommerce._id } })
         await Code.findOneAndUpdate({ code, enable: true }, { $set: { enable: false, user_id: owner_id } })
 
@@ -41,17 +38,11 @@ export const registerCommerce: ReqRes = async (req, res) => {
 export const editMarketData: ReqRes = async (req, res) => {
     if (debugg) console.log('#editMarketData')
     try {
-        const { market_id, name, phone, description, email, address, rif, socials, logo = undefined, logo_id, schedules } = req.body
-        let market
-        if (logo) {
-            let { secure_url, public_id } = await uploadImage({secure_url:logo,public_id:''})
-            await deleteImage(logo_id)
-            market = await Commerce.updateOne({ _id: market_id }, { $set: { name, email, phone, description, address, rif, socials, logo: secure_url, logo_id: public_id, schedules } })
-        } else {
-            market = await Commerce.updateOne({ _id: market_id }, { $set: { name, email, phone, description, address, rif, socials, schedules } })
-        }
-        if (market.matchedCount > 0) res.send(market)
-        else res.send(false)
+        const { market_id, name, phone, description, email, address, categories,rif, socials,delivery, logo, logo_id, schedules } = req.body
+        let { secure_url, public_id } = await uploadImage({secure_url:logo,public_id:logo_id})
+        const market = await Commerce.findOneAndUpdate({ _id: market_id }, { $set: { name, email, phone, description, address, rif, socials, delivery,schedules,logo: secure_url, logo_id: public_id,categories } },{new:true})
+        if (market) res.send(market)
+        else res.status(400).json({ msg: "Comercio no encontrado" })
     } catch (error: any) {
         res.status(400).json({ msg: error.message })
     }
@@ -63,7 +54,7 @@ export const createItem: ReqRes = async (req, res) => {
     if (debugg) console.log('#createItem')
     let aux: Image[] = []
     try {
-        const { name, description, owner_id, images, categories, price } = req.body
+        const { name, description, commerce, images, categories, price } = req.body
         const imagesInfo = await uploadImages(images)
         let arrImg: Image[] = []
         imagesInfo.forEach((img: Image) => {
@@ -75,7 +66,7 @@ export const createItem: ReqRes = async (req, res) => {
         });
 
         const newItem = await Item.create({
-            name, description, owner_id, categories, images: arrImg, price,
+            name, description, commerce, categories, images: arrImg, price,
         })
 
         res.send(newItem)
@@ -129,3 +120,13 @@ export const deleteItem: ReqRes = async (req, res) => {
     }
 }
 
+/**
+ * // let market
+        // if (logo) {
+        //     let { secure_url, public_id } = await uploadImage({secure_url:logo,public_id:logo_id})
+        //     // await deleteImage(logo_id)
+        //     market = await Commerce.updateOne({ _id: market_id }, { $set: { name, email, phone, description, address, rif, socials, logo: secure_url, logo_id: public_id, schedules } })
+        // } else {
+        //     market = await Commerce.updateOne({ _id: market_id }, { $set: { name, email, phone, description, address, rif, socials, schedules } })
+        // }
+ */

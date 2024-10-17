@@ -8,7 +8,10 @@ import debugg from "../helpers/debug";
 import User from "../models/userSchema";
 import Item from "../models/itemSchema";
 import Commerce from "../models/commerceSchema";
-
+import { Types } from "mongoose";
+const ObjectId = (val: string) => {
+  return new Types.ObjectId(val);
+};
 type ReqRes = (req: Request, res: Response) => void;
 
 export const test: ReqRes = (req, res) => {
@@ -99,8 +102,8 @@ export const getItem: ReqRes = async (req, res) => {
   const { id } = req.params;
 
   const result = await Item.findOne({ _id: id }).populate(
-    "reviews.user",
-    "name avatar"
+    "reviews.user commerce",
+    "name avatar logo schedules"
   );
   if (result) res.send(result);
   else res.status(404).json({ msg: "Elemento no encontrado" });
@@ -121,13 +124,10 @@ export const getMarket: ReqRes = async (req, res) => {
 export const searchItems: ReqRes = async (req, res) => {
   if (debugg) console.log("#searchItems");
   try {
-    const { text = false, categories = false, owner_id = false } = req.body;
-
-    const markets = categories ? categories.includes("Tiendas") : false;
-
+    const { text = false, categories = false, commerce = false } = req.body;
+    const markets = categories ? categories.includes("market") : false;
     if (markets) {
-      categories.splice(categories.indexOf("Tiendas"), 1);
-      // console.log(categories && categories.length > 0)
+      categories.splice(categories.indexOf("market"), 1);
       const result = await Commerce.find({
         $or: [
           { name: text ? new RegExp(text, "i") : { $exists: true } },
@@ -137,7 +137,7 @@ export const searchItems: ReqRes = async (req, res) => {
           categories && categories.length > 0
             ? { $in: categories }
             : { $exists: true },
-        owner_id: owner_id ? owner_id : { $exists: true },
+        commerce: commerce ? commerce : { $exists: true },
       });
       return res.send(result);
     } else {
@@ -147,23 +147,17 @@ export const searchItems: ReqRes = async (req, res) => {
           { description: text ? new RegExp(text, "i") : { $exists: true } },
         ],
         categories: categories ? { $in: categories } : { $exists: true },
-        owner_id: owner_id ? owner_id : { $exists: true },
-      }).populate("reviews.user", "name avatar");
+        commerce: commerce ? ObjectId(commerce) : { $exists: true },
+      }).populate("reviews.user commerce", "name avatar logo schedules");
       return res.send(items);
     }
-
-    // items.forEach(elem=>{
-    //     elem.images.forEach(img=>{
-    //         img = img.image
-    //     })
-    // })
   } catch (error: any) {
+    console.log(error);
     res.status(400).json({ msg: error.message });
   }
 };
 
-
-// export const download:ReqRes = async (req,res)=>{
-//   const file = `${__dirname}/riverV0.1.1.apk`;
-//   res.download(file); // Set disposition and send it.
-// }
+export const download: ReqRes = async (req, res) => {
+  const file = `${__dirname}/riverV0.1.1.apk`;
+  res.download(file); // Set disposition and send it.
+};

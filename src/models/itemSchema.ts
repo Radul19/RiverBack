@@ -6,7 +6,7 @@ const ItemSchema = new Schema(
         name: { type: String, required: true },
         price: { type: String, required: true },
         description: { type: String, required: true },
-        owner_id: { type: String, required: true },
+        commerce: { type: objId, ref: 'Commerce', required: true },
         categories: { type: Array, required: true },
         // units: { type: String, required: true },
         favorites: { type: Array, default: [] },
