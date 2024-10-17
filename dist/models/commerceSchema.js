@@ -12,6 +12,7 @@ const CommerceSchema = new mongoose_1.Schema({
     email: { type: String },
     address: { type: String },
     rif: { type: String },
+    delivery: { type: Boolean, required: true },
     reviews: [{
             type: new mongoose_1.Schema({
                 user: { type: objId, ref: 'User', required: true },

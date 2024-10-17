@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.searchItems = exports.getMarket = exports.getItem = exports.register = exports.login = exports.test = void 0;
+exports.download = exports.searchItems = exports.getMarket = exports.getItem = exports.register = exports.login = exports.test = void 0;
 //@ts-ignore
 const bcrypt_1 = __importDefault(require("bcrypt"));
 //@ts-ignore
@@ -21,6 +21,10 @@ const debug_1 = __importDefault(require("../helpers/debug"));
 const userSchema_1 = __importDefault(require("../models/userSchema"));
 const itemSchema_1 = __importDefault(require("../models/itemSchema"));
 const commerceSchema_1 = __importDefault(require("../models/commerceSchema"));
+const mongoose_1 = require("mongoose");
+const ObjectId = (val) => {
+    return new mongoose_1.Types.ObjectId(val);
+};
 const test = (req, res) => {
     if (debug_1.default)
         console.log("#test");
@@ -93,7 +97,7 @@ const getItem = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (debug_1.default)
         console.log("#getItem");
     const { id } = req.params;
-    const result = yield itemSchema_1.default.findOne({ _id: id }).populate("reviews.user", "name avatar");
+    const result = yield itemSchema_1.default.findOne({ _id: id }).populate("reviews.user commerce", "name avatar logo schedules");
     if (result)
         res.send(result);
     else
@@ -116,11 +120,10 @@ const searchItems = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     if (debug_1.default)
         console.log("#searchItems");
     try {
-        const { text = false, categories = false, owner_id = false } = req.body;
-        const markets = categories ? categories.includes("Tiendas") : false;
+        const { text = false, categories = false, commerce = false } = req.body;
+        const markets = categories ? categories.includes("market") : false;
         if (markets) {
-            categories.splice(categories.indexOf("Tiendas"), 1);
-            // console.log(categories && categories.length > 0)
+            categories.splice(categories.indexOf("market"), 1);
             const result = yield commerceSchema_1.default.find({
                 $or: [
                     { name: text ? new RegExp(text, "i") : { $exists: true } },
@@ -129,7 +132,7 @@ const searchItems = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
                 categories: categories && categories.length > 0
                     ? { $in: categories }
                     : { $exists: true },
-                owner_id: owner_id ? owner_id : { $exists: true },
+                commerce: commerce ? commerce : { $exists: true },
             });
             return res.send(result);
         }
@@ -140,23 +143,20 @@ const searchItems = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
                     { description: text ? new RegExp(text, "i") : { $exists: true } },
                 ],
                 categories: categories ? { $in: categories } : { $exists: true },
-                owner_id: owner_id ? owner_id : { $exists: true },
-            }).populate("reviews.user", "name avatar");
+                commerce: commerce ? ObjectId(commerce) : { $exists: true },
+            }).populate("reviews.user commerce", "name avatar logo schedules");
             return res.send(items);
         }
-        // items.forEach(elem=>{
-        //     elem.images.forEach(img=>{
-        //         img = img.image
-        //     })
-        // })
     }
     catch (error) {
+        console.log(error);
         res.status(400).json({ msg: error.message });
     }
 });
 exports.searchItems = searchItems;
-// export const download:ReqRes = async (req,res)=>{
-//   const file = `${__dirname}/riverV0.1.1.apk`;
-//   res.download(file); // Set disposition and send it.
-// }
+const download = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const file = `${__dirname}/riverV0.1.1.apk`;
+    res.download(file); // Set disposition and send it.
+});
+exports.download = download;
 //# sourceMappingURL=guest.js.map
